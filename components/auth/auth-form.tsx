@@ -21,11 +21,20 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
     try {
       if (mode === "signup") {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
+        const response = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
         });
-        if (signUpError) throw signUpError;
+        const data = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          throw new Error(data.error ?? "Could not create account.");
+        }
+        if (response.status === 201) {
+          router.push("/login");
+          router.refresh();
+          return;
+        }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -80,8 +89,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         disabled={loading}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-70"
       >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        {isSignup ? "Create account" : "Sign in"}
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {isSignup ? "Creating account..." : "Signing in..."}
+          </span>
+        ) : (
+          <span>{isSignup ? "Create account" : "Sign in"}</span>
+        )}
       </button>
       <p className="text-center text-sm text-slate-500">
         {isSignup ? "Already have an account?" : "New here?"}{" "}

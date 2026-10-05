@@ -98,8 +98,14 @@ export function PaywallModal({
               disabled={loading}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-70"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Upgrade to Pro
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Redirecting to Stripe...
+                </span>
+              ) : (
+                <span>Upgrade to Pro — $15/mo</span>
+              )}
             </button>
           </div>
         </div>

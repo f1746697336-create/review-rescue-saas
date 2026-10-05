@@ -38,6 +38,7 @@ export function DashboardWorkspace({
     }
 
     setLoading(true);
+    setReply("");
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -45,28 +46,51 @@ export function DashboardWorkspace({
         body: JSON.stringify({ review, tone }),
       });
 
-      const data = (await response.json()) as {
-        reply?: string;
-        credits?: number | null;
-        is_pro?: boolean;
-        error?: string;
-        code?: string;
-      };
+      const contentType = response.headers.get("content-type") ?? "";
 
-      if (response.status === 402 || data.code === "PAYWALL") {
+      if (response.status === 402) {
         setCredits(0);
         setPaywallOpen(true);
         router.refresh();
         return;
       }
 
-      if (!response.ok || !data.reply) {
+      if (!response.ok) {
+        const data = contentType.includes("application/json")
+          ? ((await response.json()) as { error?: string })
+          : { error: "Generation failed." };
         throw new Error(data.error ?? "Generation failed.");
       }
 
-      setReply(data.reply);
-      if (typeof data.is_pro === "boolean") setIsPro(data.is_pro);
-      if (typeof data.credits === "number") setCredits(data.credits);
+      const isProHeader = response.headers.get("X-Is-Pro");
+      const creditsHeader = response.headers.get("X-Credits-Remaining");
+      if (isProHeader === "true") setIsPro(true);
+      if (isProHeader === "false") setIsPro(false);
+      if (creditsHeader) {
+        const remaining = Number(creditsHeader);
+        if (!Number.isNaN(remaining)) setCredits(remaining);
+      }
+
+      if (!response.body) {
+        throw new Error("Generation failed.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+        setReply(accumulated);
+      }
+      accumulated += decoder.decode();
+      const finalReply = accumulated.trim();
+      if (!finalReply) {
+        throw new Error("The AI provider returned an empty reply.");
+      }
+      setReply(finalReply);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -83,7 +107,7 @@ export function DashboardWorkspace({
   }
 
   return (
-    <>
+    <div>
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -156,15 +180,15 @@ export function DashboardWorkspace({
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-base font-semibold text-white shadow-glow transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? (
-              <>
+              <span className="flex items-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Generating reply...
-              </>
+              </span>
             ) : (
-              <>
+              <span className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5" />
                 Generate Reply
-              </>
+              </span>
             )}
           </button>
         </div>
@@ -186,20 +210,29 @@ export function DashboardWorkspace({
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {copied ? (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-600" />
                   Copied
-                </>
+                </span>
               ) : (
-                <>
+                <span className="flex items-center gap-1.5">
                   <Copy className="h-3.5 w-3.5" />
                   Copy
-                </>
+                </span>
               )}
             </button>
           </div>
           <div className="mt-4 min-h-[140px] rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4 text-sm leading-relaxed text-slate-700">
-            {reply || (
+            {reply ? (
+              <span>
+                {reply}
+                {loading ? (
+                  <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-indigo-500 align-middle" />
+                ) : null}
+              </span>
+            ) : loading ? (
+              <span className="text-slate-400">Writing your reply...</span>
+            ) : (
               <span className="text-slate-400">
                 Your AI-crafted English reply will appear here.
               </span>
@@ -209,6 +242,6 @@ export function DashboardWorkspace({
       </div>
 
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
-    </>
+    </div>
   );
 }

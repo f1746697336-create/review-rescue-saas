@@ -1,13 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { startStripeCheckout } from "@/lib/checkout";
 import { FREE_CREDITS, PRO_PRICE_USD } from "@/lib/types";
 
 export default function BillingPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get("status");
+    if (status === "cancelled") {
+      setNotice("Checkout was cancelled. You can upgrade whenever you are ready.");
+      return;
+    }
+    if (status !== "success") return;
+
+    setNotice("Payment received. Unlocking Pro on your account...");
+    let tries = 0;
+    const timer = window.setInterval(async () => {
+      tries += 1;
+      try {
+        const response = await fetch("/api/credits");
+        const data = (await response.json()) as { is_pro?: boolean };
+        if (data.is_pro) {
+          window.clearInterval(timer);
+          setNotice("You are Pro. Unlimited replies are now unlocked.");
+          router.refresh();
+          return;
+        }
+      } catch {
+        // Keep polling while Stripe webhook settles.
+      }
+      if (tries >= 12) {
+        window.clearInterval(timer);
+        setNotice(
+          "Payment succeeded. If Pro is not unlocked in a minute, refresh this page.",
+        );
+        router.refresh();
+      }
+    }, 1500);
+
+    return () => window.clearInterval(timer);
+  }, [router]);
 
   async function onUpgrade() {
     setError(null);
@@ -30,6 +69,12 @@ export default function BillingPage() {
           Manage your plan. Upgrade to Pro for unlimited reply generation.
         </p>
       </div>
+
+      {notice ? (
+        <p className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+          {notice}
+        </p>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-3xl border border-slate-200 bg-white p-6">
@@ -75,8 +120,14 @@ export default function BillingPage() {
             disabled={loading}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-70"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Upgrade with Stripe
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Redirecting to Stripe...
+              </span>
+            ) : (
+              <span>Upgrade with Stripe</span>
+            )}
           </button>
         </div>
       </div>
