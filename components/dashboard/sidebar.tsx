@@ -50,8 +50,8 @@ export function DashboardSidebar({
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
-              <item.icon className="h-4 w-4" />
-              {item.label}
+              <item.icon className="h-4 w-4 shrink-0" />
+              <span>{item.label}</span>
             </Link>
           );
         })}
@@ -65,11 +65,12 @@ export function DashboardSidebar({
           </p>
           <button
             type="button"
+            translate="no"
             onClick={signOut}
             className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-rose-600"
           >
             <LogOut className="h-3.5 w-3.5" />
-            Sign out
+            <span>Sign out</span>
           </button>
         </div>
       </div>

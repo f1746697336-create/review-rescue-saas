@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Loader2 } from "lucide-react";
-import { startStripeCheckout } from "@/lib/checkout";
+import { Check } from "lucide-react";
+import { UpgradeButton } from "@/components/paywall/upgrade-button";
 import { FREE_CREDITS, PRO_PRICE_USD } from "@/lib/types";
 
 export function PaywallModal({
@@ -12,21 +11,7 @@ export function PaywallModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   if (!open) return null;
-
-  async function onUpgrade() {
-    setError(null);
-    setLoading(true);
-    try {
-      await startStripeCheckout();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed.");
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -51,19 +36,23 @@ export function PaywallModal({
 
         <div className="grid gap-4 p-6 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-medium text-slate-500">Free Tier</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">$0/mo</p>
+            <p className="text-sm font-medium text-slate-500">
+              <span>Free Tier</span>
+            </p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">
+              <span>$0/mo</span>
+            </p>
             <p className="mt-1 text-sm text-slate-500">
-              {FREE_CREDITS} replies total
+              <span>{FREE_CREDITS} replies total</span>
             </p>
             <ul className="mt-4 space-y-2 text-sm text-slate-600">
               <li className="flex gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-slate-400" />
-                Three AI replies forever
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                <span>Three AI replies forever</span>
               </li>
               <li className="flex gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-slate-400" />
-                Standard generation speed
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                <span>Standard generation speed</span>
               </li>
             </ul>
             <button
@@ -71,52 +60,36 @@ export function PaywallModal({
               disabled
               className="mt-6 w-full rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-400"
             >
-              Current plan
+              <span>Current plan</span>
             </button>
           </div>
 
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-5 shadow-glow">
-            <p className="text-sm font-medium text-indigo-700">Pro Tier</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
-              ${PRO_PRICE_USD}
-              <span className="text-base font-medium text-slate-500">/mo</span>
+            <p className="text-sm font-medium text-indigo-700">
+              <span>Pro Tier</span>
             </p>
-            <p className="mt-1 text-sm text-slate-600">Unlimited replies</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">
+              <span>
+                ${PRO_PRICE_USD}
+                <span className="text-base font-medium text-slate-500">/mo</span>
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              <span>Unlimited replies</span>
+            </p>
             <ul className="mt-4 space-y-2 text-sm text-slate-700">
               <li className="flex gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-indigo-600" />
-                Unlimited generations
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                <span>Unlimited generations</span>
               </li>
               <li className="flex gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-indigo-600" />
-                Priority support
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                <span>Priority support</span>
               </li>
             </ul>
-            <button
-              type="button"
-              onClick={onUpgrade}
-              disabled={loading}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-70"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Redirecting to Stripe...
-                </span>
-              ) : (
-                <span>Upgrade to Pro — $15/mo</span>
-              )}
-            </button>
+            <UpgradeButton />
           </div>
         </div>
-
-        {error ? (
-          <p className="px-6 pb-6 text-center text-sm text-rose-600">{error}</p>
-        ) : (
-          <p className="px-6 pb-6 text-center text-xs text-slate-400">
-            Stripe Checkout opens in a secure session. Cancel anytime.
-          </p>
-        )}
       </div>
     </div>
   );

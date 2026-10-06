@@ -87,24 +87,25 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <button
         type="submit"
         disabled={loading}
+        translate="no"
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-70"
       >
         {loading ? (
           <span className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            {isSignup ? "Creating account..." : "Signing in..."}
+            <span>{isSignup ? "Creating account..." : "Signing in..."}</span>
           </span>
         ) : (
           <span>{isSignup ? "Create account" : "Sign in"}</span>
         )}
       </button>
       <p className="text-center text-sm text-slate-500">
-        {isSignup ? "Already have an account?" : "New here?"}{" "}
+        <span>{isSignup ? "Already have an account?" : "New here?"}</span>{" "}
         <Link
           href={isSignup ? "/login" : "/signup"}
           className="font-medium text-indigo-600 hover:text-indigo-700"
         >
-          {isSignup ? "Sign in" : "Create a free account"}
+          <span>{isSignup ? "Sign in" : "Create a free account"}</span>
         </Link>
       </p>
     </form>

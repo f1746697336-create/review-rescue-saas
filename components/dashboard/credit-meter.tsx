@@ -13,10 +13,10 @@ export function CreditMeter({
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-slate-600">
-          {isPro ? "Pro plan" : "Free credits"}
+          <span>{isPro ? "Pro plan" : "Free credits"}</span>
         </p>
         <p className="text-xs font-semibold text-slate-900">
-          {isPro ? "Unlimited" : `${credits}/${FREE_CREDITS}`}
+          <span>{isPro ? "Unlimited" : `${credits}/${FREE_CREDITS}`}</span>
         </p>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">

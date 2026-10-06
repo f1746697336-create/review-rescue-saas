@@ -28,7 +28,7 @@ export default function LandingPage() {
             href="/signup"
             className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:bg-indigo-700"
           >
-            Start free
+            <span>Start free</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </nav>
@@ -38,7 +38,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-3xl text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
             <Sparkles className="h-3.5 w-3.5" />
-            Built for Amazon & Etsy sellers
+            <span>Built for Amazon & Etsy sellers</span>
           </p>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl sm:leading-[1.05]">
             Turn 1-star reviews into
@@ -57,7 +57,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-glow transition hover:bg-indigo-700"
             >
-              Get {FREE_CREDITS} free replies
+              <span>Get {FREE_CREDITS} free replies</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -119,7 +119,7 @@ export default function LandingPage() {
               </p>
               <div className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-semibold text-white">
                 <Zap className="h-3.5 w-3.5" />
-                Generated in under 3s
+                <span>Generated in under 3s</span>
               </div>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function LandingPage() {
             href="/signup"
             className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
-            Create your free account
+            <span>Create your free account</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
