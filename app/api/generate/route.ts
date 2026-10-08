@@ -1,5 +1,6 @@
 import { streamReviewReply } from "@/lib/ai";
 import { consumeCredit, getProfile, refundCredit } from "@/lib/credits";
+import { FRIENDLY_AI_ERROR } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import type { Tone } from "@/lib/types";
 
@@ -116,12 +117,7 @@ export async function POST(request: Request) {
     }
 
     return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate a reply.",
-      },
+      { error: FRIENDLY_AI_ERROR },
       { status: 500 },
     );
   }

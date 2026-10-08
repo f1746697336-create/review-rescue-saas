@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Loader2, Sparkles } from "lucide-react";
 import { PaywallModal } from "@/components/paywall/paywall-modal";
+import { FRIENDLY_AI_ERROR } from "@/lib/site";
 import { TONE_OPTIONS, type Tone } from "@/lib/types";
 
 export function DashboardWorkspace({
@@ -40,11 +41,16 @@ export function DashboardWorkspace({
     setLoading(true);
     setReply("");
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ review, tone }),
-      });
+      let response: Response;
+      try {
+        response = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ review, tone }),
+        });
+      } catch {
+        throw new Error(FRIENDLY_AI_ERROR);
+      }
 
       const contentType = response.headers.get("content-type") ?? "";
 
@@ -56,10 +62,20 @@ export function DashboardWorkspace({
       }
 
       if (!response.ok) {
-        const data = contentType.includes("application/json")
-          ? ((await response.json()) as { error?: string })
-          : { error: "Generation failed." };
-        throw new Error(data.error ?? "Generation failed.");
+        let message = FRIENDLY_AI_ERROR;
+        if (contentType.includes("application/json")) {
+          try {
+            const data = (await response.json()) as { error?: string };
+            if (response.status === 400 && data.error) {
+              message = data.error;
+            } else if (response.status === 401) {
+              message = "Please sign in again.";
+            }
+          } catch {
+            message = FRIENDLY_AI_ERROR;
+          }
+        }
+        throw new Error(message);
       }
 
       const isProHeader = response.headers.get("X-Is-Pro");
@@ -72,7 +88,7 @@ export function DashboardWorkspace({
       }
 
       if (!response.body) {
-        throw new Error("Generation failed.");
+        throw new Error(FRIENDLY_AI_ERROR);
       }
 
       const reader = response.body.getReader();
@@ -88,12 +104,17 @@ export function DashboardWorkspace({
       accumulated += decoder.decode();
       const finalReply = accumulated.trim();
       if (!finalReply) {
-        throw new Error("The AI provider returned an empty reply.");
+        throw new Error(FRIENDLY_AI_ERROR);
       }
       setReply(finalReply);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setReply("");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : FRIENDLY_AI_ERROR,
+      );
     } finally {
       setLoading(false);
     }
@@ -170,7 +191,9 @@ export function DashboardWorkspace({
           </div>
 
           {error ? (
-            <p className="mt-4 text-sm text-rose-600">{error}</p>
+            <p className="mt-4 text-sm text-rose-600">
+              <span>{error}</span>
+            </p>
           ) : null}
 
           <button
@@ -233,7 +256,9 @@ export function DashboardWorkspace({
                 {reply}
                 {loading ? (
                   <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-indigo-500 align-middle" />
-                ) : null}
+                ) : (
+                  <span className="hidden" />
+                )}
               </span>
             ) : loading ? (
               <span className="text-slate-400">Writing your reply...</span>

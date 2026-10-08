@@ -1,4 +1,5 @@
 import { buildSystemPrompt } from "@/lib/prompts";
+import { FRIENDLY_AI_ERROR } from "@/lib/site";
 import type { Tone } from "@/lib/types";
 
 type ChatCompletionResponse = {
@@ -77,12 +78,12 @@ export async function generateReviewReply(review: string, tone: Tone) {
   const data = (await response.json()) as ChatCompletionResponse;
 
   if (!response.ok) {
-    throw new Error(data.error?.message ?? "AI provider request failed.");
+    throw new Error(FRIENDLY_AI_ERROR);
   }
 
   const reply = data.choices?.[0]?.message?.content?.trim();
   if (!reply) {
-    throw new Error("The AI provider returned an empty reply.");
+    throw new Error(FRIENDLY_AI_ERROR);
   }
 
   return reply;
@@ -109,14 +110,7 @@ export async function streamReviewReply(
   });
 
   if (!response.ok || !response.body) {
-    let message = "AI provider request failed.";
-    try {
-      const data = (await response.json()) as ChatCompletionResponse;
-      if (data.error?.message) message = data.error.message;
-    } catch {
-      // Keep the default error.
-    }
-    throw new Error(message);
+    throw new Error(FRIENDLY_AI_ERROR);
   }
 
   const reader = response.body.getReader();
@@ -126,37 +120,41 @@ export async function streamReviewReply(
 
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          buffer += decoder.decode();
-          const leftover = contentFromSseLine(buffer);
-          if (leftover && leftover !== "DONE") {
-            controller.enqueue(encoder.encode(leftover));
-          }
-          controller.close();
-          return;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split(/\r?\n/);
-        buffer = lines.pop() ?? "";
-
-        let text = "";
-        for (const line of lines) {
-          const piece = contentFromSseLine(line);
-          if (piece === "DONE") {
-            if (text) controller.enqueue(encoder.encode(text));
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            buffer += decoder.decode();
+            const leftover = contentFromSseLine(buffer);
+            if (leftover && leftover !== "DONE") {
+              controller.enqueue(encoder.encode(leftover));
+            }
             controller.close();
             return;
           }
-          if (piece) text += piece;
-        }
 
-        if (text) {
-          controller.enqueue(encoder.encode(text));
-          return;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop() ?? "";
+
+          let text = "";
+          for (const line of lines) {
+            const piece = contentFromSseLine(line);
+            if (piece === "DONE") {
+              if (text) controller.enqueue(encoder.encode(text));
+              controller.close();
+              return;
+            }
+            if (piece) text += piece;
+          }
+
+          if (text) {
+            controller.enqueue(encoder.encode(text));
+            return;
+          }
         }
+      } catch {
+        controller.error(new Error(FRIENDLY_AI_ERROR));
       }
     },
     cancel() {

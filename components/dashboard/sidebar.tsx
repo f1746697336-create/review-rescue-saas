@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { CreditCard, Home, LogOut } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { CreditMeter } from "@/components/dashboard/credit-meter";
+import { ContactSupport } from "@/components/support/contact-support";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV = [
@@ -73,6 +74,7 @@ export function DashboardSidebar({
             <span>Sign out</span>
           </button>
         </div>
+        <ContactSupport className="block text-[11px] leading-relaxed text-slate-500 transition hover:text-indigo-600" />
       </div>
     </aside>
   );

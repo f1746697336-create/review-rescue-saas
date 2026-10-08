@@ -7,6 +7,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { ContactSupport } from "@/components/support/contact-support";
 import { FREE_CREDITS, PRO_PRICE_USD } from "@/lib/types";
 
 export default function LandingPage() {
@@ -200,9 +201,12 @@ export default function LandingPage() {
       <footer className="border-t border-slate-100 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 sm:flex-row">
           <Logo />
-          <p className="text-xs text-slate-400">
-            © {new Date().getFullYear()} ReviewRescue AI. All rights reserved.
-          </p>
+          <div className="flex flex-col items-center gap-2 sm:items-end">
+            <ContactSupport className="text-xs text-slate-500 transition hover:text-indigo-600" />
+            <p className="text-xs text-slate-400">
+              © {new Date().getFullYear()} ReviewRescue AI. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </main>
